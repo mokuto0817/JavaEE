@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.idle.mapper.ShoppingMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.idle.entity.Shopping" id="shoppingMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="productId" column="product_id"/>
+        <result property="number" column="number"/>
+        <result property="type" column="type"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <select id="selectPage" resultMap="shoppingMap">
+        SELECT s.*, p.* FROM `shopping` s, product p WHERE s.product_id = p.id
+        <if test="type != null">AND s.type = #{type}</if>
+        <if test="userId != null">AND s.user_id = #{userId}</if>
+        LIMIT #{current},#{size}
+    </select>
+
+    <select id="selectPageCount"  resultType="long">
+        SELECT COUNT(*) FROM `shopping` s, product p WHERE s.product_id = p.id
+        <if test="type != null">AND s.type = #{type}</if>
+        <if test="userId != null">AND s.user_id = #{userId}</if>
+    </select>
+
+    <insert id="insert" parameterType="com.idle.entity.Shopping">
+        INSERT INTO `shopping`(`user_id`, `product_id`, `number`, `type`, `create_time`)
+        VALUES (#{shopping.userId}, #{shopping.productId}, #{shopping.number}, #{shopping.type}, #{shopping.createTime});
+    </insert>
+
+    <update id="updateById" parameterType="com.idle.entity.Shopping">
+        UPDATE `shopping` SET
+        `user_id` = #{shopping.userId},
+        `product_id` = #{shopping.productId},
+        `number` = #{shopping.number},
+        `type` = #{shopping.type},
+        `create_time` = #{shopping.createTime}
+        WHERE `id` = #{shopping.id};
+
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM `shopping` WHERE id = #{id}
+    </delete>
+
+</mapper>

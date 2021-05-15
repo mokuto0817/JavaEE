@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.idle.mapper.ProductMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.idle.entity.Product" id="productMap">
+        <result property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="name" column="name"/>
+        <result property="img" column="img"/>
+        <result property="price" column="price"/>
+        <result property="number" column="number"/>
+        <result property="status" column="status"/>
+        <result property="label" column="label"/>
+        <result property="description" column="description"/>
+        <result property="createTime" column="create_time"/>
+        <result property="data1" column="data1"/>
+    </resultMap>
+
+    <select id="selectPage" resultMap="productMap">
+        SELECT * FROM `product`
+        <where>
+            <if test="userId != null">AND user_id = #{userId}  </if>
+            <if test="name != null and name != ''"><bind name="name_pattern" value="'%'+name+'%'"/>AND name LIKE #{name_pattern}</if>
+            <if test="highPrice != null and highPrice != ''">AND #{highPrice} >= price</if>
+            <if test="minPrice != null and minPrice != ''">AND #{minPrice} >= price</if>
+            <if test="number != null and number == 0">AND #{number} = number</if>
+            <if test="number != null and number > 0">AND number >= #{number}  </if>
+            <if test="label != null and label != ''"><bind name="label_pattern" value="'%'+label+'%'"/>AND label LIKE #{label_pattern}</if>
+            <if test="status != null and status != ''">AND status = #{status}</if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
+
+    <select id="selectPageCount"  resultType="long">
+        SELECT COUNT(*) FROM `product`
+        <where>
+            <if test="userId != null">AND user_id = #{userId}  </if>
+            <if test="name != null and name != ''"><bind name="name_pattern" value="'%'+name+'%'"/>AND name LIKE #{name_pattern}</if>
+            <if test="highPrice != null and highPrice != ''">AND #{highPrice} >= price</if>
+            <if test="minPrice != null and minPrice != ''">AND #{minPrice} >= price</if>
+            <if test="number != null and number == 0">AND #{number} = number</if>
+            <if test="number != null and number > 0">AND number >= #{number}  </if>
+            <if test="label != null and label != ''"><bind name="label_pattern" value="'%'+label+'%'"/>AND label LIKE #{label_pattern}</if>
+            <if test="status != null and status != ''">AND status = #{status}</if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.idle.entity.Product">
+        INSERT INTO `product`(`user_id`, `name`, `img`, `price`, `number`, `status`, `label`, `description`, `create_time`, `data1`)
+        VALUES (#{product.userId}, #{product.name}, #{product.img}, #{product.price}, #{product.number}, #{product.status}, #{product.label}, #{product.description}, #{product.createTime}, #{product.data1});
+    </insert>
+
+    <select id="selectById" resultMap="productMap">
+        SELECT * FROM `product` WHERE id = #{id}
+    </select>
+
+    <update id="updateById" parameterType="com.idle.entity.Product">
+        UPDATE `product` SET
+        `name` = #{product.name},
+        `img` = #{product.img},
+        `price` = #{product.price},
+        `number` = #{product.number},
+        `status` = #{product.status},
+        `label` = #{product.label},
+        `description` = #{product.description},
+        `create_time` = #{product.createTime},
+        `data1` = #{product.data1}
+        WHERE `id` = #{product.id};
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM `product` WHERE id = #{id}
+    </delete>
+
+</mapper>

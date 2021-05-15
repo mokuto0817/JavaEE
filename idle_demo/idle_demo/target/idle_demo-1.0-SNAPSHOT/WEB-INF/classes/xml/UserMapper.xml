@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.idle.mapper.UserMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.idle.entity.User" id="userMap">
+        <result property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="tel" column="tel"/>
+        <result property="name" column="name"/>
+        <result property="createTime" column="create_time"/>
+        <result property="data1" column="data1"/>
+    </resultMap>
+
+    <select id="selectPage" resultMap="userMap">
+        SELECT * FROM `user`
+        <where>
+            <if test="username != null and username != ''"><bind name="username_pattern" value="'%'+username+'%'"/>AND username LIKE #{username_pattern}</if>
+            <if test="name != null and name != ''"><bind name="name_pattern" value="'%'+name+'%'"/>AND name LIKE #{name_pattern}</if>
+            <if test="tel != null and tel != ''"><bind name="tel_pattern" value="'%'+tel+'%'"/>AND tel LIKE #{tel_pattern}</if>
+        </where>
+        LIMIT #{current},#{size}
+    </select>
+
+    <select id="selectPageCount"  resultType="long">
+        SELECT COUNT(*) FROM `user`
+        <where>
+            <if test="username != null and username != ''"><bind name="username_pattern" value="'%'+username+'%'"/>AND username LIKE #{username_pattern}</if>
+            <if test="name != null and name != ''"><bind name="name_pattern" value="'%'+name+'%'"/>AND name LIKE #{name_pattern}</if>
+            <if test="tel != null and tel != ''"><bind name="tel_pattern" value="'%'+tel+'%'"/>AND tel LIKE #{tel_pattern}</if>
+        </where>
+    </select>
+
+    <insert id="insert" parameterType="com.idle.entity.User">
+        INSERT INTO `user`(`username`, `password`, `tel`, `name`, `create_time`, `data1`)
+        VALUES (#{user.username}, #{user.password}, #{user.tel}, #{user.name}, #{user.createTime}, #{user.data1});
+    </insert>
+
+    <update id="updateById" parameterType="com.idle.entity.User">
+        UPDATE `user` SET
+        `username` = #{user.username},
+        `password` = #{user.password},
+        `tel` = #{user.tel},
+        `name` = #{user.name},
+        `data1` = #{user.data1}
+        WHERE `id` = #{user.id};
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM `user` WHERE id = #{id}
+    </delete>
+
+    <select id="selectByUserNameAndPassword" parameterType="com.idle.entity.User" resultMap="userMap">
+        SELECT * FROM `user` WHERE username = #{user.username} AND `password` = #{user.password}
+    </select>
+</mapper>

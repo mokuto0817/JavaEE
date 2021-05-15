@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.idle.mapper.OrderMapper">
+
+	<!-- 可根据自己的需求，是否要使用 -->
+    <resultMap type="com.idle.entity.Order" id="orderMap">
+        <result property="id" column="id"/>
+        <result property="productId" column="product_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="orderNumber" column="order_number"/>
+        <result property="price" column="price"/>
+        <result property="createTime" column="create_time"/>
+        <result property="data1" column="data1"/>
+        <result property="userName" column="userName"/>
+        <result property="tel" column="tel"/>
+        <result property="pName" column="pName"/>
+        <result property="number" column="number"/>
+    </resultMap>
+
+    <select id="selectPage" resultMap="orderMap">
+        SELECT o.*, u.name userName, u.tel tel, p.name pName, p.number number
+        FROM `order` o, `user` u, product p WHERE o.user_id = u.id AND o.product_id = p.id
+        <if test="name != null and name != ''"><bind name="name_pattern" value="'%'+name+'%'"/>AND p.name LIKE #{name_pattern}</if>
+        <if test="userId != null">AND p.user_id LIKE #{userId}</if>
+        LIMIT #{current},#{size}
+    </select>
+
+    <select id="selectPageCount"  resultType="long">
+        SELECT COUNT(*)
+        FROM `order` o, `user` u, product p WHERE o.user_id = u.id AND o.product_id = p.id
+        <if test="name != null and name != ''"><bind name="name_pattern" value="'%'+name+'%'"/>AND p.name LIKE #{name_pattern}</if>
+        <if test="userId != null">AND p.user_id LIKE #{userId}</if>
+    </select>
+
+    <insert id="insert" parameterType="com.idle.entity.Order">
+        INSERT INTO `order`(`product_id`, `user_id`, `order_number`, `price`, `create_time`, `data1`)
+        VALUES (#{order.productId}, #{order.userId}, #{order.orderNumber}, #{order.price}, #{order.createTime}, #{order.data1});
+    </insert>
+
+    <update id="updateById" parameterType="com.idle.entity.Order">
+        UPDATE `order` SET
+        `product_id` = #{order.productId},
+        `user_id` = #{order.userId},
+        `order_number` = #{order.orderNumber},
+        `price` = #{order.price},
+        `create_time` = #{order.createTime},
+        `data1` = #{order.data1} WHERE `id` = #{order.id};
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM `order` WHERE id = #{id}
+    </delete>
+
+</mapper>

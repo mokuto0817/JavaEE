@@ -1,0 +1,212 @@
+<template>
+  <div class="app-container">
+    <div class="filter-container">
+      <el-input v-model="listQuery.name" clearable placeholder="姓名" style="width: 200px;" class="filter-item" />
+      <el-input v-model="listQuery.username" clearable placeholder="用户名" style="width: 200px;" class="filter-item" />
+      <el-input v-model="listQuery.tel" clearable placeholder="电话" style="width: 200px;" class="filter-item" />
+      <el-button v-waves class="filter-item" type="primary" icon="el-icon-search" @click="fetchData">
+        Search
+      </el-button>
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
+        Add
+      </el-button>
+      <!-- <el-checkbox v-model="showReviewer" class="filter-item" style="margin-left:15px;" @change="tableKey=tableKey+1">
+        reviewer
+      </el-checkbox> -->
+    </div>
+    <el-table
+      v-loading="listLoading"
+      :data="list"
+      element-loading-text="Loading"
+      border
+      fit
+      highlight-current-row
+    >
+      <el-table-column align="center" label="序号" width="95">
+        <template slot-scope="scope">{{ scope.$index+1 }}</template>
+      </el-table-column>
+      <el-table-column label="姓名" width="200" align="center">
+        <template slot-scope="scope">{{ scope.row.name }}</template>
+      </el-table-column>
+      <el-table-column label="用户名" width="200" align="center">
+        <template slot-scope="scope">{{ scope.row.username }}</template>
+      </el-table-column>
+      <el-table-column label="电话" width="200" align="center">
+        <template slot-scope="scope">{{ scope.row.tel }}</template>
+      </el-table-column>
+      <el-table-column label="Actions" align="center" width="230" class-name="small-padding fixed-width">
+        <template slot-scope="{row}">
+          <el-button type="primary" size="mini" @click="handleUpdate(row)">
+            Edit
+          </el-button>
+          <el-button v-if="row.status!='deleted'" size="mini" type="danger" @click="handleDelete(row)">
+            Delete
+          </el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <pagination v-show="total>0" :total="total" :page.sync="listQuery.current" :limit.sync="listQuery.size" @pagination="fetchData" />
+
+    <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
+      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="temp.name" placeholder="密码" />
+        </el-form-item>
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="temp.username" placeholder="用户名" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="temp.password" placeholder="密码" />
+        </el-form-item>
+        <el-form-item label="电话" prop="tel">
+          <el-input v-model="temp.tel" placeholder="密码" />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">
+          Cancel
+        </el-button>
+        <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">
+          Confirm
+        </el-button>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script>
+import * as user from '@/api/user'
+import waves from '@/directive/waves' // waves directive
+import Pagination from '@/components/Pagination' // secondary package based on el-pagination
+
+export default {
+  name: 'User',
+  components: { Pagination },
+  directives: { waves },
+  filters: {
+    statusFilter(status) {
+      const statusMap = {
+        published: 'success',
+        draft: 'gray',
+        deleted: 'danger'
+      }
+      return statusMap[status]
+    }
+  },
+  data() {
+    return {
+      list: null,
+      listLoading: true,
+      total: 0,
+      listQuery: {
+        current: 1,
+        size: 10,
+        name: undefined,
+        username: undefined,
+        tel: undefined,
+      },
+      roles: ['ROLE_USER', 'ROLE_ADMIN'],
+      dialogPluginVisible: false,
+      pluginData: [],
+      dialogFormVisible: false,
+      dialogStatus: '',
+      textMap: {
+        update: 'Edit',
+        create: 'Create'
+      },
+      rules: {
+        name: [{ required: true, message: 'name is required', trigger: 'blur' }],
+        username: [{ required: true, message: 'username is required', trigger: 'blur' }],
+        password: [{ required: true, message: 'password is required', trigger: 'blur' }],
+        tel: [{ required: true, message: 'tel is required', trigger: 'blur' }],
+      },
+      temp: {
+        id: undefined,
+        name: '',
+        username: '',
+        password: '',
+        tel: '',
+      },
+      resetTemp() {
+        this.temp = this.$options.data().temp
+      }
+    }
+  },
+  created() {
+    this.fetchData()
+  },
+  methods: {
+    fetchData() {
+      this.listLoading = true
+      user.getList(this.listQuery).then(res => {
+        this.total = res.data.total
+        this.list = res.data.records
+        this.listLoading = false
+      })
+    },
+    handleCreate() {
+      this.resetTemp()
+      this.dialogStatus = 'create'
+      this.dialogFormVisible = true
+      this.$nextTick(() => {
+        this.$refs['dataForm'].clearValidate()
+      })
+    },
+    createData() {
+      console.log(this.dialogStatus);
+      this.$refs['dataForm'].validate((valid) => {
+        if (valid) {
+          user.createUser(this.temp).then(() => {
+            this.fetchData()
+            this.dialogFormVisible = false
+            this.$notify({
+              title: 'Success',
+              message: 'Created Successfully',
+              type: 'success',
+              duration: 2000
+            })
+          })
+        }
+      })
+    },
+    handleUpdate(row) {
+      this.temp = Object.assign({}, row) // copy obj
+      this.dialogStatus = 'update'
+      console.log(this.dialogStatus);
+      this.dialogFormVisible = true
+      this.$nextTick(() => {
+        this.$refs['dataForm'].clearValidate()
+      })
+    },
+    updateData() {
+      console.log(this.dialogStatus);
+      this.$refs['dataForm'].validate((valid) => {
+        if (valid) {
+          const tempData = Object.assign({}, this.temp)
+          user.updateUser(tempData).then(() => {
+            this.fetchData()
+            this.dialogFormVisible = false
+            this.$notify({
+              title: 'Success',
+              message: 'Update Successfully',
+              type: 'success',
+              duration: 2000
+            })
+          })
+        }
+      })
+    },
+    handleDelete(row) {
+      user.deleteUser(row.id).then(response => {
+        this.fetchData()
+        this.$notify({
+          title: 'Success',
+          message: 'Delete Successfully',
+          type: 'success',
+          duration: 2000
+        })
+      })
+    }
+  }
+}
+</script>
